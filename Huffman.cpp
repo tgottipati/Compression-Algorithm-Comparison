@@ -9,6 +9,7 @@
 #include <vector>
 #include <unordered_map>
 #include <queue>
+#include <string>
 using namespace std;
 //return unordered map of char-freq key value pairs
 
@@ -46,7 +47,18 @@ struct Compare {
         return a->frequency > b->frequency;
     }
 };
-void Traversal(Node* root) {}
+void Traversal(Node* root,string code,unordered_map<char,string>& codes) {
+    if (root == nullptr) {
+        return;
+    }
+    // If this is a leaf, save its code
+    if (root->left == nullptr && root->right == nullptr) {
+        codes[root->character] = code;
+        return;
+    }
+    Traversal(root->left, code + "0", codes);
+    Traversal(root->right, code + "1", codes);
+}
 void Huffman(vector<char> chars) {
     vector<Node*> leafNodes =countFrequencies(chars);
     priority_queue<Node*, vector<Node*>, Compare> pq;
