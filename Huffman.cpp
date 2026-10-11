@@ -10,16 +10,17 @@
 #include <unordered_map>
 #include <queue>
 #include <string>
+#include <iostream>
 using namespace std;
 //return unordered map of char-freq key value pairs
 
 
 struct Node {
     char character;
-    int frequency;
+    unsigned int frequency;
     Node* left;
     Node* right;
-    Node(char c, int f) {
+    Node(char c, unsigned int f) {
         character = c;
         frequency = f;
         left = nullptr;
@@ -32,8 +33,8 @@ struct Node {
         right = r;
     }
 };
-vector<Node*> countFrequencies(vector<char> chars) {
-    unordered_map<char,int> freq;
+vector<Node*> countFrequencies(const vector<char> chars) {
+    unordered_map<char,unsigned int> freq;
     vector<Node*> leafNodes;
     for (char c : chars) {
         freq[c]++;
@@ -41,25 +42,37 @@ vector<Node*> countFrequencies(vector<char> chars) {
     for (auto c : freq) {
         leafNodes.push_back(new Node(c.first, c.second));
     }
+    return leafNodes;
 }
 struct Compare {
     bool operator()(Node* a, Node* b) {
         return a->frequency > b->frequency;
     }
 };
-void Traversal(Node* root,string code,unordered_map<char,string>& codes) {
+void Traversal(const Node* root,string code,unordered_map<char,string>& codes) {
     if (root == nullptr) {
         return;
     }
-    // If this is a leaf, save its code
+    // If this is a leaf, save its code, if only 1 unique character give it code 0
     if (root->left == nullptr && root->right == nullptr) {
-        codes[root->character] = code;
+        codes[root->character] = code.empty() ? "0" : code;
         return;
     }
+
     Traversal(root->left, code + "0", codes);
     Traversal(root->right, code + "1", codes);
 }
-void Huffman(vector<char> chars) {
+void deleteTree(Node* root) {
+    if (root == nullptr) {
+        return;
+    }
+
+    deleteTree(root->left);
+    deleteTree(root->right);
+
+    delete root;
+}
+unordered_map<char,string> Huffman(const vector<char> chars) {
     vector<Node*> leafNodes =countFrequencies(chars);
     priority_queue<Node*, vector<Node*>, Compare> pq;
     //add all nodes to priority Queue
@@ -77,4 +90,15 @@ void Huffman(vector<char> chars) {
         Node* parent = new Node(left, right);
         pq.push(parent);
     }
+    if (pq.empty()) {
+        return {};
+    }
+    Node* root = pq.top();
+    unordered_map<char, string> codes;
+    Traversal(root, "", codes);
+    for (auto& pair : codes) {
+        cout << pair.first << ": " << pair.second << '\n';
+    }
+    deleteTree(root);
+    return codes;
 }
