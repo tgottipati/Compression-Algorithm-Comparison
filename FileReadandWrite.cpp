@@ -23,9 +23,6 @@ int main() {
     unordered_map<char,string> huffmanMap=Huffman(v);
     ofstream outputfile("compressedFile.bin", ios::binary | ios::out);
     if (outputfile.is_open()) {
-        for (char letter : v) {
-            outputfile.write(huffmanMap[letter].c_str(), huffmanMap[letter].size());
-        }
         outputfile.close();
         cout << "Data written to file successfully." << endl;
     } else {
