@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include "Huffman.cpp"
+#include "bitPacker.cpp"
 using namespace std;
 
 int main() {
@@ -21,6 +22,7 @@ int main() {
     }
     file.close();
     unordered_map<char,string> huffmanMap=Huffman(v);
+    vector<unsigned char> bytes = bitPacker(huffmanMap, v);;
     ofstream outputfile("compressedFile.bin", ios::binary | ios::out);
     if (outputfile.is_open()) {
         outputfile.close();
