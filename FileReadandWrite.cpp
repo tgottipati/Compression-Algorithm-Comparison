@@ -4,12 +4,19 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-#include "Huffman.cpp"
-#include "bitPacker.cpp"
+#include <unordered_map>
+#include <string>
 using namespace std;
+unordered_map<char, string> Huffman(const vector<char> chars);
+
+std::vector<unsigned char> bitPacker(
+    std::unordered_map<char, std::string> huffmanMap,
+    std::vector<char> input
+);
+
 
 int main() {
-    ifstream file("example.txt"); // open file for reading
+    ifstream file("greatGatsby.txt"); // open file for reading
     if (!file) {
         cout << "Unable to open file" << endl;
         return 1;
