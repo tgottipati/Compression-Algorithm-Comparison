@@ -61,7 +61,7 @@ unordered_map<string, char> readHeader(ifstream& file,uint64_t& totalBits) {
                   sizeof(codeLength));
 
         string code(codeLength, '\0');
-        file.read(code.data(), codeLength);
+        file.read(&code[0], codeLength);
 
         reverseMap[code] = character;
     }
