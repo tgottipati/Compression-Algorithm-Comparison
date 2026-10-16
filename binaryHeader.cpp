@@ -42,17 +42,12 @@ void writeHeader(ofstream& file, const unordered_map<char, string>& huffmanMap,u
     }
 }
 
-unordered_map<string, char> readHeader(
-    ifstream& file,
-    uint64_t& totalBits
-) {
+unordered_map<string, char> readHeader(ifstream& file,uint64_t& totalBits) {
     uint16_t mapSize;
 
-    file.read(reinterpret_cast<char*>(&mapSize),
-              sizeof(mapSize));
+    file.read(reinterpret_cast<char*>(&mapSize),sizeof(mapSize));
 
-    file.read(reinterpret_cast<char*>(&totalBits),
-              sizeof(totalBits));
+    file.read(reinterpret_cast<char*>(&totalBits),sizeof(totalBits));
 
     unordered_map<string, char> reverseMap;
 
