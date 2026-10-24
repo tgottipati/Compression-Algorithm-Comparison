@@ -64,3 +64,32 @@ std::string LZW::decode(const std::vector<int>&  codeWords) {
 
     return decoded;
 }
+
+std::vector<unsigned char> LZW::bitPacker(const std::vector<int>& codeWords) {
+    int bitCount = 0;
+    unsigned char byte = 0;
+    std::vector<unsigned char> bytes;
+    int maxCode = *std::max_element(codeWords.begin(), codeWords.end());
+    int bitsPerInt = 1;
+    for (int n = maxCode; n>1; n>>=1) {
+        bitsPerInt++;
+    }
+    for (int code: codeWords) {
+        for (int i = bitsPerInt-1; i >= 0; i-- ) {
+            const unsigned char bit = (code>>i) & 1;
+            byte = byte*2+bit;
+            ++bitCount;
+            if (bitCount == 8) {
+                bytes.push_back(byte);
+                byte = 0;
+                bitCount = 0;
+            }
+        }
+
+    }
+    if (bitCount > 0) {
+        byte <<= (8 - bitCount);
+        bytes.push_back(byte);
+    }
+    return bytes;
+}
