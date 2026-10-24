@@ -13,9 +13,10 @@
 class LZW {
 public:
     LZW() = default;
-    std::string decode(std::string input);
+    std::string decode(const std::vector<int>& codeWords);
     std::vector<int> encode(const std::string& input);
     void resetDict();
+    void resetDictDecode();
 
 private:
     std::unordered_map<std::string, int> dict;

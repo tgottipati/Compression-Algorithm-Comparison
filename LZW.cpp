@@ -11,7 +11,13 @@ void LZW::resetDict() {
         dict[ch] = i;
     }
 }
-
+void LZW::resetDictDecode() {
+    dictDecode.clear();
+    for (int i = 0; i < 256; i++) {
+        std::string ch(1, static_cast<char>(i));
+        dictDecode[i] = ch;
+    }
+}
 std::vector<int> LZW::encode(const std::string& input) {
     resetDict();
     std::vector<int> codeWord;
@@ -31,4 +37,30 @@ std::vector<int> LZW::encode(const std::string& input) {
     }
     codeWord.push_back(dict.at(S));
     return codeWord;
+}
+
+std::string LZW::decode(const std::vector<int>&  codeWords) {
+    resetDictDecode();
+    int old = codeWords[0];
+    std::string decoded;
+    std::string S = dictDecode[old];
+    std::string C;
+    C+=S[0];
+    int nextCode = 256;
+    decoded.append(dictDecode[old]);
+    for (int i = 1; i < codeWords.size(); i++) {
+        int curr = codeWords[i];
+        if (dictDecode.find(curr) == dictDecode.end()) {
+            S = dictDecode[old];
+            S.append(C);
+        }else {
+            S = dictDecode[curr];
+        }
+        decoded.append(S);
+        C = S[0];
+        dictDecode[nextCode++] = dictDecode[old]+C;
+        old = curr;
+    }
+
+    return decoded;
 }
