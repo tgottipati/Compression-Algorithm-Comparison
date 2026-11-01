@@ -29,7 +29,7 @@ private:
     std::unordered_map<int, std::string> dictDecode;
     void resetDict();
     void resetDictDecode();
-    int maxBitsPerInt = 16;
+    int maxBitsPerInt = 20;
 };
 
 
