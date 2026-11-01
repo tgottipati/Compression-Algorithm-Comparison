@@ -11,6 +11,8 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include <fstream>
+#include <sstream>
 
 class LZW {
 public:
@@ -18,12 +20,16 @@ public:
     std::string decode(const std::vector<int>& codeWords);
     std::vector<int> encode(const std::string& input);
     std::vector<unsigned char> bitPacker(const std::vector<int>& codeWords);
+    std::vector<int> bitUnpacker(const std::vector<unsigned char>& bytes, size_t totalCodes);
+    void compressFile(const std::string& inputFile, const std::string& outputFile);
+    void decompressFile(const std::string& inputFile, const std::string& outputFile);
 
 private:
     std::unordered_map<std::string, int> dict;
     std::unordered_map<int, std::string> dictDecode;
     void resetDict();
     void resetDictDecode();
+    int maxBitsPerInt = 16;
 };
 
 

@@ -7,32 +7,15 @@
 
 int main() {
     LZW lzw;
+    std::string filename = "greatGastby";
+    std::string inputFile = "../testFiles/inputFiles/" + filename + ".txt";
 
-    std::string input = "TOBEORNOTTOBEORTOBEORNOT";
+    std::string outputAddress = "../testFiles/outputFiles/";
 
-    // Step 1: Encode the original string with LZW.
-    std::vector<int> codes = lzw.encode(input);
+    std::string lzwFile = outputAddress + filename + ".lzw";
+    std::cout << lzwFile << std::endl;
+    std::string outputFile = outputAddress + filename + "Remade.txt";
+    lzw.compressFile(inputFile, lzwFile);
+    lzw.decompressFile(lzwFile, outputFile);
 
-    std::cout << "Original string: " << input << '\n';
-
-    std::cout << "Encoded codes: ";
-    for (int code : codes) {
-        std::cout << code << " ";
-    }
-    std::cout << '\n';
-
-    // Step 2: Pack the codes into bytes.
-    std::vector<unsigned char> packed = lzw.bitPacker(codes);
-
-    std::cout << "Packed bytes (decimal): ";
-    for (unsigned char byte : packed) {
-        std::cout << static_cast<int>(byte) << " ";
-    }
-    std::cout << '\n';
-
-
-    std::cout << "Original size: " << input.size()
-              << " bytes\n";
-    std::cout << "Packed size: " << packed.size()
-              << " bytes\n";
 }

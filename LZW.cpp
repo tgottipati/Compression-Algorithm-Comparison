@@ -69,12 +69,14 @@ std::vector<unsigned char> LZW::bitPacker(const std::vector<int>& codeWords) {
     int bitCount = 0;
     unsigned char byte = 0;
     std::vector<unsigned char> bytes;
-    int maxCode = *std::max_element(codeWords.begin(), codeWords.end());
-    int bitsPerInt = 1;
-    for (int n = maxCode; n>1; n>>=1) {
-        bitsPerInt++;
-    }
+    int nextCode = 256;
     for (int code: codeWords) {
+        int bitsPerInt = 9;
+        int threshold = 512;
+        while (nextCode >= threshold && bitsPerInt < maxBitsPerInt) {
+            bitsPerInt++;
+            threshold <<=1;
+        }
         for (int i = bitsPerInt-1; i >= 0; i-- ) {
             const unsigned char bit = (code>>i) & 1;
             byte = byte*2+bit;
@@ -85,11 +87,98 @@ std::vector<unsigned char> LZW::bitPacker(const std::vector<int>& codeWords) {
                 bitCount = 0;
             }
         }
-
+        ++nextCode;
     }
     if (bitCount > 0) {
         byte <<= (8 - bitCount);
         bytes.push_back(byte);
     }
     return bytes;
+}
+
+std::vector<int> LZW::bitUnpacker(const std::vector<unsigned char>& bytes, size_t totalCodes) {
+    std::vector<int> codeWords;
+    codeWords.reserve(totalCodes);
+
+    size_t byteIndex = 0;
+    unsigned int bitBuffer = 0;
+    int bitCount = 0;
+    int nextCode = 256;
+    for (size_t i = 0; i<totalCodes; i++) {
+        int bitsPerInt = 9;
+        int threshold = 512;
+        while (nextCode >= threshold && bitsPerInt < maxBitsPerInt) {
+            bitsPerInt++;
+            threshold <<=1;
+        }
+
+        while (bitCount < bitsPerInt) {
+            if (byteIndex < bytes.size()) {
+                bitBuffer = (bitBuffer <<8) | bytes[byteIndex++];
+                bitCount+=8;
+            }else {
+                break;
+            }
+        }
+        int shift = bitCount -bitsPerInt;
+        int code = (bitBuffer >> shift) & ((1<<bitsPerInt)-1);
+        bitCount -= bitsPerInt;
+        bitBuffer &= (1<<bitCount)-1;
+
+        codeWords.push_back(code);
+        ++nextCode;
+    }
+    return codeWords;
+}
+
+void LZW::compressFile(const std::string &inputFile, const std::string &outputFile) {
+    std::ifstream textFile(inputFile, std::ios::binary);
+    if (!textFile) {
+            std::cout << "Unable to open uncompressed text file" << std::endl;
+            return;
+    }
+    std::stringstream ss;
+    ss<< textFile.rdbuf();
+    std::string input = ss.str();
+    textFile.close();
+
+    std::vector<int> codeWords = encode(input);
+    std::vector<unsigned char> bytes = bitPacker(codeWords);
+    size_t totalCodes = codeWords.size();
+
+    std::ofstream lzwFile(outputFile, std::ios::binary);
+    if (!lzwFile) {
+        std::cout << "Unable to write lzw file" << std::endl;
+        return;
+    }
+    lzwFile.write(reinterpret_cast<char*>(&totalCodes), sizeof(totalCodes));
+    lzwFile.write(reinterpret_cast<char*>(bytes.data()), bytes.size());
+    lzwFile.close();
+
+    std::cout << "Successfully compressed " << inputFile << " -> " << outputFile << "\n";
+}
+
+void LZW::decompressFile(const std::string &inputFile, const std::string &outputFile) {
+    std::ifstream lzwFile(inputFile, std::ios::binary);
+    if (!lzwFile) {
+        std::cout << "Unable to open lzw file" << std::endl;
+        return;
+    }
+    size_t totalCodes = 0;
+    lzwFile.read(reinterpret_cast<char*>(&totalCodes), sizeof(totalCodes));
+    std::vector<unsigned char> bytes(
+    (std::istreambuf_iterator<char>(lzwFile)),
+    std::istreambuf_iterator<char>()
+    );
+
+    std::vector<int> codeWords = bitUnpacker(bytes, totalCodes);
+    std::string uncompressedText = decode(codeWords);
+    std::ofstream textFile(outputFile, std::ios::binary);
+    if (!textFile) {
+        std::cout << "Unable to write decompressed text file" << std::endl;
+        return;
+    }
+    textFile << uncompressedText;
+    textFile.close();
+    std::cout << "Successfully decompressed " << inputFile << " -> " << outputFile << "\n";
 }
