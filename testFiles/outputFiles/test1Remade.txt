@@ -1,3 +1,0 @@
-The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.
-Compression algorithms love repetition, and repetition makes LZW dictionaries grow!
-A B C A B C A B C A B C A B C LZW LZW LZW LZW testing testing 1 2 3.

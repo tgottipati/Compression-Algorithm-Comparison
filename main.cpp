@@ -5,7 +5,7 @@
 
 int main() {
     LZW lzw;
-    std::string filename = "greatGastby";
+    std::string filename = "war-and-peace";
     std::string inputFile = "../testFiles/inputFiles/" + filename + ".txt";
     std::string outputAddress = "../testFiles/outputFiles/";
 
