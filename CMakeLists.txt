@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.3)
+cmake_minimum_required(VERSION 4.2.2)
 project(Compression_Algorithm_Comparison)
 
 set(CMAKE_CXX_STANDARD 14)
