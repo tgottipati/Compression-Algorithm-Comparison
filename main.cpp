@@ -4,13 +4,15 @@
 #include <unordered_map>
 #include <string>
 #include <chrono>
-#include <cstdint>
-#include "Huffman.h"
+#include "huffman.h"
 #include "binaryHeader.h"
 #include "bitPacker.h"
 #include "LZW.h"
-
 using namespace std;
+unordered_map<char, string> Huffman(const vector<char>& chars);
+vector<unsigned char> bitPacker(unordered_map<char, string> huffmanMap, vector<char> v, uint64_t& totalBits);
+void writeHeader(ofstream& file, const unordered_map<char, string>& huffmanMap, uint64_t totalBits);
+unordered_map<string, char> readHeader(ifstream& file, uint64_t& totalBits);
 
 size_t getFileSize(const string& path) {
     ifstream f(path, ios::binary | ios::ate);
@@ -18,101 +20,77 @@ size_t getFileSize(const string& path) {
 }
 
 int main() {
-    string filename = "war-and-peace";
-    string inputFile = "testFiles/inputFiles/" + filename + ".txt";
-    string outputDir = "testFiles/outputFiles/";
 
-    string huffCompressed   = outputDir + filename + ".bin";
+
+    string filename = "greatGatsby";
+
+    cout << "Enter the file you would like to compress/decompress: ";
+    cin >> filename;
+
+    string inputFile = "../testFiles/inputFiles/" + filename + ".txt";
+    string outputDir = "../testFiles/outputFiles/";
+
+    string huffCompressed  = outputDir + filename + ".bin";
     string huffDecompressed = outputDir + filename + "HuffRemade.txt";
-    string lzwCompressed    = outputDir + filename + ".lzw";
-    string lzwDecompressed  = outputDir + filename + "LZWRemade.txt";
+    string lzwCompressed   = outputDir + filename + ".lzw";
+    string lzwDecompressed = outputDir + filename + "LZWRemade.txt";
 
-    // Read input file once
+    // Read input once, share between both algorithms
     ifstream file(inputFile);
-    if (!file) { cerr << "Unable to open input file: " << inputFile << "\n"; return 1; }
+    if (!file) { cerr << "Unable to open input file\n"; return 1; }
     vector<char> v((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
     file.close();
 
     size_t originalSize = getFileSize(inputFile);
 
-    // ── Huffman Compress ─────────────────────────────────────────────────────
-    cout << "Running Huffman compression...\n";
-    auto huffCompStart = chrono::high_resolution_clock::now();
+    // ── Huffman ───────────────────────────────────────────────────────────────
+    cout << "Running Huffman...\n";
 
+    auto huffCompStart = chrono::high_resolution_clock::now();
     unordered_map<char, string> huffmanMap = Huffman(v);
     uint64_t totalBits = 0;
     vector<unsigned char> bytes = bitPacker(huffmanMap, v, totalBits);
-
     ofstream huffOut(huffCompressed, ios::binary);
-    if (!huffOut) { cerr << "Error opening Huffman output file\n"; return 1; }
+    if (!huffOut) { cerr << "Error opening Huffman output\n"; return 1; }
     writeHeader(huffOut, huffmanMap, totalBits);
     huffOut.write(reinterpret_cast<const char*>(bytes.data()), bytes.size());
     huffOut.close();
-
     auto huffCompEnd = chrono::high_resolution_clock::now();
 
-    // ── Huffman Decompress ───────────────────────────────────────────────────
-    cout << "Running Huffman decompression...\n";
     auto huffDecompStart = chrono::high_resolution_clock::now();
-
     ifstream huffIn(huffCompressed, ios::binary);
-    if (!huffIn) { cerr << "Error opening compressed Huffman file\n"; return 1; }
     uint64_t readTotalBits = 0;
     unordered_map<string, char> reverseMap = readHeader(huffIn, readTotalBits);
     vector<unsigned char> readBytes((istreambuf_iterator<char>(huffIn)), istreambuf_iterator<char>());
     huffIn.close();
-
-    // Reconstruct tree from reverseMap
-    Node* root = new Node('\0', 0);
-    for (const auto& entry : reverseMap) {
-        const string& code = entry.first;
-        char character = entry.second;
-        Node* current = root;
-        for (char bit : code) {
-            if (bit == '0') {
-                if (!current->left)  current->left  = new Node('\0', 0);
-                current = current->left;
-            } else {
-                if (!current->right) current->right = new Node('\0', 0);
-                current = current->right;
-            }
-        }
-        current->character = character;
-    }
-
-    // Decode using tree traversal
-    Node* current = root;
     ofstream huffDecoded(huffDecompressed);
-    if (!huffDecoded) { cerr << "Error opening Huffman decompressed output\n"; return 1; }
+    string currentCode;
     uint64_t bitsRead = 0;
     for (unsigned char byte : readBytes) {
         for (int i = 7; i >= 0 && bitsRead < readTotalBits; i--, bitsRead++) {
-            current = ((byte >> i) & 1) ? current->right : current->left;
-            if (current->left == nullptr && current->right == nullptr) {
-                huffDecoded << current->character;
-                current = root;
+            currentCode += ((byte >> i) & 1) ? '1' : '0';
+            if (reverseMap.count(currentCode)) {
+                huffDecoded << reverseMap[currentCode];
+                currentCode.clear();
             }
         }
     }
     huffDecoded.close();
-    deleteTree(root);
-
     auto huffDecompEnd = chrono::high_resolution_clock::now();
 
-    // ── LZW Compress ─────────────────────────────────────────────────────────
-    cout << "Running LZW compression...\n";
+    // ── LZW ──────────────────────────────────────────────────────────────────
+    cout << "Running LZW...\n";
     LZW lzw;
+
     auto lzwCompStart = chrono::high_resolution_clock::now();
     lzw.compressFile(inputFile, lzwCompressed);
     auto lzwCompEnd = chrono::high_resolution_clock::now();
 
-    // ── LZW Decompress ───────────────────────────────────────────────────────
-    cout << "Running LZW decompression...\n";
     auto lzwDecompStart = chrono::high_resolution_clock::now();
     lzw.decompressFile(lzwCompressed, lzwDecompressed);
     auto lzwDecompEnd = chrono::high_resolution_clock::now();
 
-    // ── Sizes + Timings ───────────────────────────────────────────────────────
+    // ── Report ────────────────────────────────────────────────────────────────
     size_t huffSize = getFileSize(huffCompressed);
     size_t lzwSize  = getFileSize(lzwCompressed);
 
@@ -121,8 +99,8 @@ int main() {
     chrono::duration<double> lzwCompTime    = lzwCompEnd    - lzwCompStart;
     chrono::duration<double> lzwDecompTime  = lzwDecompEnd  - lzwDecompStart;
 
-    // ── Report ────────────────────────────────────────────────────────────────
-    auto printReport = [&](const string& name, size_t compSize, double compT, double decompT) {
+    auto report = [&](const string& name, size_t compSize,
+                      double compT, double decompT) {
         double factor  = static_cast<double>(originalSize) / compSize;
         double savings = (1.0 - static_cast<double>(compSize) / originalSize) * 100.0;
         cout << " Original Size      : " << originalSize << " bytes\n";
@@ -134,23 +112,25 @@ int main() {
     };
 
     cout << "\n========================================\n";
-    cout << "           HUFFMAN RESULTS              \n";
+    cout << "             HUFFMAN RESULTS            \n";
     cout << "========================================\n";
-    printReport("Huffman", huffSize, huffCompTime.count(), huffDecompTime.count());
+    report("Huffman", huffSize, huffCompTime.count(), huffDecompTime.count());
 
     cout << "\n========================================\n";
-    cout << "             LZW RESULTS                \n";
+    cout << "              LZW RESULTS               \n";
     cout << "========================================\n";
-    printReport("LZW", lzwSize, lzwCompTime.count(), lzwDecompTime.count());
+    report("LZW", lzwSize, lzwCompTime.count(), lzwDecompTime.count());
 
     cout << "\n========================================\n";
-    cout << "               WINNER                   \n";
+    cout << "              WINNER                    \n";
     cout << "========================================\n";
     cout << " Best Compression : " << (huffSize < lzwSize ? "Huffman" : "LZW")
          << " (by " << (huffSize < lzwSize ? lzwSize - huffSize : huffSize - lzwSize)
          << " bytes)\n";
-    cout << " Fastest Compress : " << (huffCompTime   < lzwCompTime   ? "Huffman" : "LZW") << "\n";
-    cout << " Fastest Decomp   : " << (huffDecompTime < lzwDecompTime ? "Huffman" : "LZW") << "\n";
+    cout << " Fastest Compress : "
+         << (huffCompTime < lzwCompTime ? "Huffman" : "LZW") << "\n";
+    cout << " Fastest Decomp   : "
+         << (huffDecompTime < lzwDecompTime ? "Huffman" : "LZW") << "\n";
     cout << "========================================\n\n";
 
     return 0;
