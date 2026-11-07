@@ -13,3 +13,13 @@
 #include <string>
 
 std::unordered_map<char, std::string> Huffman(const std::vector<char>& chars);
+struct Node {
+    char character;
+    unsigned int frequency;
+    Node* left;
+    Node* right;
+    Node(char c, unsigned int f);
+    Node(Node* l, Node* r);
+};
+
+void deleteTree(Node* root);
