@@ -33,7 +33,7 @@ struct Node {
         right = r;
     }
 };
-vector<Node*> countFrequencies(const vector<char> chars) {
+vector<Node*> countFrequencies(const vector<char>& chars) {
     unordered_map<char,unsigned int> freq;
     vector<Node*> leafNodes;
     for (char c : chars) {
@@ -72,7 +72,7 @@ void deleteTree(Node* root) {
 
     delete root;
 }
-unordered_map<char,string> Huffman(const vector<char> chars) {
+unordered_map<char,string> Huffman(const vector<char>& chars) {
     vector<Node*> leafNodes =countFrequencies(chars);
     priority_queue<Node*, vector<Node*>, Compare> pq;
     //add all nodes to priority Queue

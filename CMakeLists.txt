@@ -8,7 +8,6 @@ include_directories(.)
 add_executable(Compression_Algorithm_Comparison
         binaryHeader.cpp
         bitPacker.cpp
-        FileReadandWrite.cpp
         Huffman.cpp
         LZW.cpp
         LZW.h
