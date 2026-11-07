@@ -13,4 +13,7 @@ add_executable(Compression_Algorithm_Comparison
         LZW.cpp
         LZW.h
         main.cpp
+        Huffman.h
+        binaryHeader.h
+        bitPacker.h
 )
