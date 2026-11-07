@@ -97,7 +97,7 @@ unordered_map<char,string> Huffman(const vector<char>& chars) {
     unordered_map<char, string> codes;
     Traversal(root, "", codes);
     for (auto& pair : codes) {
-        cout << pair.first << ": " << pair.second << '\n';
+        //cout << pair.first << ": " << pair.second << '\n';
     }
     deleteTree(root);
     return codes;

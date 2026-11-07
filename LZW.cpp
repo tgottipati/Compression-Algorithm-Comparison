@@ -155,7 +155,7 @@ void LZW::compressFile(const std::string &inputFile, const std::string &outputFi
     lzwFile.write(reinterpret_cast<char*>(bytes.data()), bytes.size());
     lzwFile.close();
 
-    std::cout << "Successfully compressed " << inputFile << " -> " << outputFile << "\n";
+    //std::cout << "Successfully compressed " << inputFile << " -> " << outputFile << "\n";
 }
 
 void LZW::decompressFile(const std::string &inputFile, const std::string &outputFile) {
@@ -180,5 +180,5 @@ void LZW::decompressFile(const std::string &inputFile, const std::string &output
     }
     textFile << uncompressedText;
     textFile.close();
-    std::cout << "Successfully decompressed " << inputFile << " -> " << outputFile << "\n";
+    //std::cout << "Successfully decompressed " << inputFile << " -> " << outputFile << "\n";
 }

@@ -22,9 +22,9 @@ size_t getFileSize(const string& path) {
 int main() {
 
 
-    string filename = "greatGatsby";
+    string filename = "";
 
-    cout << "Enter the file you would like to compress/decompress: ";
+    cout << "Enter the file you would like to compress/decompress: \n";
     cin >> filename;
 
     string inputFile = "../testFiles/inputFiles/" + filename + ".txt";
@@ -44,7 +44,7 @@ int main() {
     size_t originalSize = getFileSize(inputFile);
 
     // ── Huffman ───────────────────────────────────────────────────────────────
-    cout << "Running Huffman...\n";
+    //cout << "Running Huffman...\n";
 
     auto huffCompStart = chrono::high_resolution_clock::now();
     unordered_map<char, string> huffmanMap = Huffman(v);
@@ -79,7 +79,7 @@ int main() {
     auto huffDecompEnd = chrono::high_resolution_clock::now();
 
     // ── LZW ──────────────────────────────────────────────────────────────────
-    cout << "Running LZW...\n";
+    //cout << "Running LZW...\n";
     LZW lzw;
 
     auto lzwCompStart = chrono::high_resolution_clock::now();
