@@ -1,10 +1,16 @@
-cmake_minimum_required(VERSION 4.2)
+cmake_minimum_required(VERSION 4.3)
 project(Compression_Algorithm_Comparison)
 
 set(CMAKE_CXX_STANDARD 14)
 
+include_directories(.)
+
 add_executable(Compression_Algorithm_Comparison
-        Huffman.cpp
-        FileReadandWrite.cpp
+        binaryHeader.cpp
         bitPacker.cpp
-        binaryHeader.cpp)
+        FileReadandWrite.cpp
+        Huffman.cpp
+        LZW.cpp
+        LZW.h
+        main.cpp
+)
