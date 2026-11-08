@@ -8,6 +8,7 @@
 #include "binaryHeader.h"
 #include "bitPacker.h"
 #include "LZW.h"
+#include <algorithm>
 using namespace std;
 unordered_map<char, string> Huffman(const vector<char>& chars);
 vector<unsigned char> bitPacker(unordered_map<char, string> huffmanMap, vector<char> v, uint64_t& totalBits);
@@ -18,6 +19,73 @@ size_t getFileSize(const string& path) {
     ifstream f(path, ios::binary | ios::ate);
     return f.is_open() ? (size_t)f.tellg() : 0;
 }
+
+
+
+bool verifyCompressionIntegrity(const std::string& originalPath, const std::string& decompressedPath) {
+    // Open in binary mode, seeking immediately to the end to get file size
+    std::ifstream origFile(originalPath, std::ios::binary | std::ios::ate);
+    std::ifstream decompFile(decompressedPath, std::ios::binary | std::ios::ate);
+
+    if (!origFile.is_open() || !decompFile.is_open()) {
+        std::cerr << "Validation Error: Could not open one or both files for verification.\n";
+        return false;
+    }
+
+    // 1. Check File Size: If sizes differ, the algorithm failed
+    std::streamsize origSize = origFile.tellg();
+    std::streamsize decompSize = decompFile.tellg();
+
+    if (origSize != decompSize) {
+        std::cout << "FAIL: File sizes do not match!\n"
+                  << "  Original size:     " << origSize << " bytes\n"
+                  << "  Decompressed size: " << decompSize << " bytes\n";
+        return false;
+    }
+
+    // Rewind back to the beginning to stream data
+    origFile.seekg(0, std::ios::beg);
+    decompFile.seekg(0, std::ios::beg);
+
+    // 2. Stream and compare chunk by chunk (efficient for any file size)
+    const size_t CHUNK_SIZE = 4096;
+    std::vector<char> origBuffer(CHUNK_SIZE);
+    std::vector<char> decompBuffer(CHUNK_SIZE);
+
+    size_t byteOffset = 0;
+
+    while (origFile && decompFile) {
+        origFile.read(origBuffer.data(), CHUNK_SIZE);
+        decompFile.read(decompBuffer.data(), CHUNK_SIZE);
+
+        std::streamsize origBytesRead = origFile.gcount();
+        std::streamsize decompBytesRead = decompFile.gcount();
+
+        // Extra safeguard checking read lengths
+        if (origBytesRead != decompBytesRead) {
+            std::cout << "FAIL: Stream error or size mismatch during chunk read near byte " << byteOffset << "\n";
+            return false;
+        }
+
+        // Byte-by-byte exact block comparison
+        if (!std::equal(origBuffer.begin(), origBuffer.begin() + origBytesRead, decompBuffer.begin())) {
+            // Find exactly where it broke to help you debug your algorithm
+            for (std::streamsize i = 0; i < origBytesRead; ++i) {
+                if (origBuffer[i] != decompBuffer[i]) {
+                    std::cout << "FAIL: Mismatch found at byte offset: " << (byteOffset + i) << "\n";
+                    return false;
+                }
+            }
+        }
+
+        byteOffset += origBytesRead;
+    }
+
+    std::cout << "SUCCESS: The decompressed file is an exact bitwise match of the original (" << byteOffset << " bytes verified).\n";
+    return true;
+}
+
+
 
 int main() {
 
@@ -133,5 +201,11 @@ int main() {
          << (huffDecompTime < lzwDecompTime ? "Huffman" : "LZW") << "\n";
     cout << "========================================\n\n";
 
+    cout << "Huffman Validation: " << endl;
+    verifyCompressionIntegrity(inputFile, huffDecompressed);
+
+    cout << "\nLZW Validation: " << endl;
+    verifyCompressionIntegrity(inputFile, lzwDecompressed);
     return 0;
 }
+

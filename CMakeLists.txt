@@ -16,3 +16,4 @@ add_executable(Compression_Algorithm_Comparison
         binaryHeader.h
         bitPacker.h
 )
+
