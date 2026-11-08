@@ -4,6 +4,7 @@
 
 #include "LZW.h"
 
+//Reset and Refill Encoding Map with ASCII characters
 void LZW::resetDict() {
     dict.clear();
     for (int i = 0; i < 256; i++) {
@@ -11,6 +12,8 @@ void LZW::resetDict() {
         dict[ch] = i;
     }
 }
+
+//Reset and Refill Decoding Map with ASCII characters
 void LZW::resetDictDecode() {
     dictDecode.clear();
     for (int i = 0; i < 256; i++) {
@@ -18,6 +21,8 @@ void LZW::resetDictDecode() {
         dictDecode[i] = ch;
     }
 }
+
+//Compress String Input in Encoded Integers
 std::vector<int> LZW::encode(const std::string& input) {
     resetDict();
     std::vector<int> codeWord;
@@ -39,6 +44,7 @@ std::vector<int> LZW::encode(const std::string& input) {
     return codeWord;
 }
 
+//Decode Encoded Integer into String
 std::string LZW::decode(const std::vector<int>&  codeWords) {
     resetDictDecode();
     int old = codeWords[0];
@@ -65,6 +71,7 @@ std::string LZW::decode(const std::vector<int>&  codeWords) {
     return decoded;
 }
 
+//Convert Vector of Integers into Binary
 std::vector<unsigned char> LZW::bitPacker(const std::vector<int>& codeWords) {
     int bitCount = 0;
     unsigned char byte = 0;
@@ -96,6 +103,7 @@ std::vector<unsigned char> LZW::bitPacker(const std::vector<int>& codeWords) {
     return bytes;
 }
 
+//Convert Binary into Vector of Integers
 std::vector<int> LZW::bitUnpacker(const std::vector<unsigned char>& bytes, size_t totalCodes) {
     std::vector<int> codeWords;
     codeWords.reserve(totalCodes);
@@ -131,7 +139,9 @@ std::vector<int> LZW::bitUnpacker(const std::vector<unsigned char>& bytes, size_
     return codeWords;
 }
 
+//Take txt File and Create Compressed file in LZW format
 void LZW::compressFile(const std::string &inputFile, const std::string &outputFile) {
+    //Read txt file
     std::ifstream textFile(inputFile, std::ios::binary);
     if (!textFile) {
             std::cout << "Unable to open uncompressed text file" << std::endl;
@@ -142,10 +152,12 @@ void LZW::compressFile(const std::string &inputFile, const std::string &outputFi
     std::string input = ss.str();
     textFile.close();
 
+    //Compress using LZW algorithm
     std::vector<int> codeWords = encode(input);
     std::vector<unsigned char> bytes = bitPacker(codeWords);
     size_t totalCodes = codeWords.size();
 
+    //Create LZW file
     std::ofstream lzwFile(outputFile, std::ios::binary);
     if (!lzwFile) {
         std::cout << "Unable to write lzw file" << std::endl;
@@ -158,7 +170,9 @@ void LZW::compressFile(const std::string &inputFile, const std::string &outputFi
     //std::cout << "Successfully compressed " << inputFile << " -> " << outputFile << "\n";
 }
 
+//Take Compressed LZW file and Create Uncompressed txt file
 void LZW::decompressFile(const std::string &inputFile, const std::string &outputFile) {
+    //Read LZW file
     std::ifstream lzwFile(inputFile, std::ios::binary);
     if (!lzwFile) {
         std::cout << "Unable to open lzw file" << std::endl;
@@ -171,6 +185,7 @@ void LZW::decompressFile(const std::string &inputFile, const std::string &output
     std::istreambuf_iterator<char>()
     );
 
+    //Decode LZW file
     std::vector<int> codeWords = bitUnpacker(bytes, totalCodes);
     std::string uncompressedText = decode(codeWords);
     std::ofstream textFile(outputFile, std::ios::binary);
@@ -178,6 +193,8 @@ void LZW::decompressFile(const std::string &inputFile, const std::string &output
         std::cout << "Unable to write decompressed text file" << std::endl;
         return;
     }
+
+    //Write Decoded String to File
     textFile << uncompressedText;
     textFile.close();
     //std::cout << "Successfully decompressed " << inputFile << " -> " << outputFile << "\n";
